@@ -130,6 +130,21 @@ deleting the overlay from the hide-region-overlays \"ring\"."
 	(delete-overlay (car hide-region-overlays))
 	(setq hide-region-overlays (cdr hide-region-overlays)))))
 
+(defun hide-region-unhide-at-point ()
+  "Unhide the top-level region at point. Do not unhide hidden
+  sub-regions. Deletes the overlay from the hide-region-overlays \"ring\"."
+  (interactive)
+  (let* ((child-p (lambda (c p) (and (>= (overlay-start c) (overlay-start p))
+                                     (<= (overlay-end c) (overlay-end p)))))
+         (overlays (remove-duplicates (sort (overlays-at (- (point) 1)) child-p)
+                                      :test child-p)))
+    (mapc (lambda (o)
+            (setq hide-region-overlays
+                  (delete-if (lambda (x) (equal x o))
+                             hide-region-overlays))
+            (delete-overlay o))
+          overlays)))
+
 (provide 'hide-region)
 
 ;;; hide-region.el ends here
